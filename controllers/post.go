@@ -87,6 +87,16 @@ func GetPost(c *gin.Context) {
 	c.JSON(http.StatusOK, post)
 }
 
+type PatchPostRequest struct {
+	Title     *string   `json:"title"`
+	Slug      *string   `json:"slug"`
+	Excerpt   *string   `json:"excerpt"`
+	Content   *string   `json:"content"`
+	Tags      *[]string `json:"tags"`
+	PostType  *string   `json:"post_type"`
+	Published *bool     `json:"published"`
+}
+
 func UpdatePost(c *gin.Context) {
 	var post models.Post
 	id := c.Param("id")
@@ -95,19 +105,34 @@ func UpdatePost(c *gin.Context) {
 		return
 	}
 
-	var req CreatePostRequest
+	var req PatchPostRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	post.Title = req.Title
-	post.Slug = req.Slug
-	post.Content = req.Content
-	post.Excerpt = req.Excerpt
-	post.Tags = req.Tags
-	post.PostType = req.PostType
-	post.Published = req.Published
+	if req.Title != nil {
+		post.Title = *req.Title
+	}
+	if req.Slug != nil {
+		post.Slug = *req.Slug
+	}
+	if req.Excerpt != nil {
+		post.Excerpt = *req.Excerpt
+	}
+	if req.Content != nil {
+		post.Content = *req.Content
+	}
+	if req.Tags != nil {
+		post.Tags = *req.Tags
+	}
+	if req.PostType != nil {
+		post.PostType = *req.PostType
+	}
+	if req.Published != nil {
+		post.Published = *req.Published
+	}
+
 	config.DB.Save(&post)
 
 	c.JSON(http.StatusOK, post)

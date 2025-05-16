@@ -15,7 +15,7 @@ func RegisterPostRoutes(r *gin.Engine) {
 		group.Use(middleware.JWTAuthMiddleware())
 		{
 			group.POST("", controllers.CreatePost)
-			group.PUT("/:id", controllers.UpdatePost)
+			group.PATCH("/:id", controllers.UpdatePost)
 			group.DELETE("/:id", controllers.DeletePost)
 		}
 	}
