@@ -1,6 +1,4 @@
-FROM golang:1.24
-
-RUN go install github.com/air-verse/air@latest
+FROM golang:1.24 as builder
 
 WORKDIR /app
 
@@ -9,4 +7,16 @@ RUN go mod download
 
 COPY . .
 
-CMD ["air"]
+RUN go build -o blog-server .
+
+FROM debian:bullseye-slim
+
+WORKDIR /app
+
+COPY --from=builder /app/blog-server .
+
+EXPOSE 8080
+
+ENV PORT=8080
+
+CMD ["./blog-server"]
