@@ -1,19 +1,26 @@
 package main
 
 import (
-	"net/http"
+	"log"
+	"os"
 
+	"github.com/dohyeoplim/blog-server/config"
+	"github.com/dohyeoplim/blog-server/routes"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-    r := gin.Default()
+	config.LoadEnv()
+	config.ConnectDB()
 
-    r.GET("/ping", func(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{
-            "message": "pong",
-        })
-    })
+	r := gin.Default()
+	routes.RegisterAuthRoutes(r)
 
-    r.Run(":8080")
+	port := os.Getenv("SERVER_PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("🚀 Server running at http://localhost:%s", port)
+	r.Run(":" + port)
 }
