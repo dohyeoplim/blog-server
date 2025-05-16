@@ -11,9 +11,13 @@ import (
 )
 
 type CreatePostRequest struct {
-	Title   string `json:"title"`
-	Slug    string `json:"slug"`
-	Content string `json:"content"`
+	Title     string   `json:"title"`
+	Slug      string   `json:"slug"`
+	Excerpt   string   `json:"excerpt"`
+	Content   string   `json:"content"`
+	Tags      []string `json:"tags"`
+	PostType  string   `json:"post_type"`
+	Published bool     `json:"published"`
 }
 
 func CreatePost(c *gin.Context) {
@@ -24,10 +28,14 @@ func CreatePost(c *gin.Context) {
 	}
 
 	post := models.Post{
-		ID:      uuid.New(),
-		Title:   req.Title,
-		Slug:    req.Slug,
-		Content: req.Content,
+		ID:        uuid.New(),
+		Title:     req.Title,
+		Slug:      req.Slug,
+		Content:   req.Content,
+		Excerpt:   req.Excerpt,
+		Tags:      req.Tags,
+		PostType:  req.PostType,
+		Published: req.Published,
 	}
 
 	config.DB.Create(&post)
@@ -96,6 +104,10 @@ func UpdatePost(c *gin.Context) {
 	post.Title = req.Title
 	post.Slug = req.Slug
 	post.Content = req.Content
+	post.Excerpt = req.Excerpt
+	post.Tags = req.Tags
+	post.PostType = req.PostType
+	post.Published = req.Published
 	config.DB.Save(&post)
 
 	c.JSON(http.StatusOK, post)
