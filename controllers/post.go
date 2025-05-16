@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/dohyeoplim/blog-server/config"
 	"github.com/dohyeoplim/blog-server/models"
@@ -33,10 +34,38 @@ func CreatePost(c *gin.Context) {
 	c.JSON(http.StatusCreated, post)
 }
 
+type PostSummary struct {
+	ID        uuid.UUID `json:"id"`
+	Title     string    `json:"title"`
+	Slug      string    `json:"slug"`
+	Excerpt   string    `json:"excerpt"`
+	Tags      []string  `json:"tags"`
+	PostType  string    `json:"post_type"`
+	Published bool      `json:"published"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 func GetAllPosts(c *gin.Context) {
 	var posts []models.Post
 	config.DB.Find(&posts)
-	c.JSON(http.StatusOK, posts)
+
+	var summaries []PostSummary
+	for _, post := range posts {
+		summaries = append(summaries, PostSummary{
+			ID:        post.ID,
+			Title:     post.Title,
+			Slug:      post.Slug,
+			Excerpt:   post.Excerpt,
+			Tags:      post.Tags,
+			PostType:  post.PostType,
+			Published: post.Published,
+			CreatedAt: post.CreatedAt,
+			UpdatedAt: post.UpdatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, summaries)
 }
 
 func GetPost(c *gin.Context) {
