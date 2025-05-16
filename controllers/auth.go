@@ -61,8 +61,25 @@ func VerifyTOTP(c *gin.Context) {
 	if services.ValidateTOTP(user.TOTPSecret, req.Token) {
 		user.IsVerified = true
 		config.DB.Save(&user)
-		c.JSON(http.StatusOK, gin.H{"message": "TOTP verified!"})
+
+		token, err := services.GenerateJWT(user.ID.String())
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Failed to generate token"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "TOTP verified",
+			"token":   token,
+		})
 	} else {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
 	}
+}
+
+func Me(c *gin.Context) {
+	user_id := c.MustGet("user_id").(string)
+	c.JSON(http.StatusOK, gin.H{
+		"user_id": user_id,
+	})
 }
