@@ -9,7 +9,7 @@ COPY . .
 
 RUN go build -o blog-server .
 
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 WORKDIR /app
 
