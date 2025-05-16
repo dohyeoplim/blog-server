@@ -15,6 +15,7 @@ func main() {
 
 	r := gin.Default()
 	routes.RegisterAuthRoutes(r)
+	routes.RegisterPostRoutes(r)
 
 	port := os.Getenv("SERVER_PORT")
 	if port == "" {

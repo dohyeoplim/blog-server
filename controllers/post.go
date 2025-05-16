@@ -1,0 +1,82 @@
+package controllers
+
+import (
+	"net/http"
+
+	"github.com/dohyeoplim/blog-server/config"
+	"github.com/dohyeoplim/blog-server/models"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
+
+type CreatePostRequest struct {
+	Title   string `json:"title"`
+	Slug    string `json:"slug"`
+	Content string `json:"content"`
+}
+
+func CreatePost(c *gin.Context) {
+	var req CreatePostRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	post := models.Post{
+		ID:      uuid.New(),
+		Title:   req.Title,
+		Slug:    req.Slug,
+		Content: req.Content,
+	}
+
+	config.DB.Create(&post)
+	c.JSON(http.StatusCreated, post)
+}
+
+func GetAllPosts(c *gin.Context) {
+	var posts []models.Post
+	config.DB.Find(&posts)
+	c.JSON(http.StatusOK, posts)
+}
+
+func GetPost(c *gin.Context) {
+	var post models.Post
+	id := c.Param("id")
+	result := config.DB.First(&post, "id = ?", id)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		return
+	}
+	c.JSON(http.StatusOK, post)
+}
+
+func UpdatePost(c *gin.Context) {
+	var post models.Post
+	id := c.Param("id")
+	if err := config.DB.First(&post, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		return
+	}
+
+	var req CreatePostRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	post.Title = req.Title
+	post.Slug = req.Slug
+	post.Content = req.Content
+	config.DB.Save(&post)
+
+	c.JSON(http.StatusOK, post)
+}
+
+func DeletePost(c *gin.Context) {
+	id := c.Param("id")
+	if err := config.DB.Delete(&models.Post{}, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Delete failed"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Post deleted"})
+}
