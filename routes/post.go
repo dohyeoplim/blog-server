@@ -9,14 +9,14 @@ import (
 func RegisterPostRoutes(r *gin.Engine) {
 	group := r.Group("/api/posts")
 	{
-		group.GET("", controllers.GetAllPosts)
-		group.GET("/:id", controllers.GetPost)
+		group.GET("", middleware.OptionalJWTAuthMiddleware(), controllers.GetAllPosts)
+		group.GET("/:slug", middleware.OptionalJWTAuthMiddleware(), controllers.GetPost)
 
 		group.Use(middleware.JWTAuthMiddleware())
 		{
 			group.POST("", controllers.CreatePost)
-			group.PATCH("/:id", controllers.UpdatePost)
-			group.DELETE("/:id", controllers.DeletePost)
+			group.PATCH("/:slug", controllers.UpdatePost)
+			group.DELETE("/:slug", controllers.DeletePost)
 		}
 	}
 }

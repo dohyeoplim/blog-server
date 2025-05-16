@@ -10,6 +10,8 @@ import (
 	"github.com/google/uuid"
 )
 
+// --- DTOs ---
+
 type CreatePostRequest struct {
 	Title     string   `json:"title"`
 	Slug      string   `json:"slug"`
@@ -19,6 +21,30 @@ type CreatePostRequest struct {
 	PostType  string   `json:"post_type"`
 	Published bool     `json:"published"`
 }
+
+type PatchPostRequest struct {
+	Title     *string   `json:"title"`
+	Slug      *string   `json:"slug"`
+	Excerpt   *string   `json:"excerpt"`
+	Content   *string   `json:"content"`
+	Tags      *[]string `json:"tags"`
+	PostType  *string   `json:"post_type"`
+	Published *bool     `json:"published"`
+}
+
+type PostSummary struct {
+	ID        uuid.UUID `json:"id"`
+	Title     string    `json:"title"`
+	Slug      string    `json:"slug"`
+	Excerpt   string    `json:"excerpt"`
+	Tags      []string  `json:"tags"`
+	PostType  string    `json:"post_type"`
+	Published bool      `json:"published"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// --- Handlers ---
 
 func CreatePost(c *gin.Context) {
 	var req CreatePostRequest
@@ -42,21 +68,19 @@ func CreatePost(c *gin.Context) {
 	c.JSON(http.StatusCreated, post)
 }
 
-type PostSummary struct {
-	ID        uuid.UUID `json:"id"`
-	Title     string    `json:"title"`
-	Slug      string    `json:"slug"`
-	Excerpt   string    `json:"excerpt"`
-	Tags      []string  `json:"tags"`
-	PostType  string    `json:"post_type"`
-	Published bool      `json:"published"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
 func GetAllPosts(c *gin.Context) {
 	var posts []models.Post
-	config.DB.Find(&posts)
+	query := config.DB
+
+	_, authenticated := c.Get("user_id")
+	if !authenticated {
+		query = query.Where("published = ?", true)
+	}
+
+	if err := query.Find(&posts).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch posts"})
+		return
+	}
 
 	var summaries []PostSummary
 	for _, post := range posts {
@@ -77,30 +101,28 @@ func GetAllPosts(c *gin.Context) {
 }
 
 func GetPost(c *gin.Context) {
+	slug := c.Param("slug")
+
 	var post models.Post
-	id := c.Param("id")
-	result := config.DB.First(&post, "id = ?", id)
-	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+	query := config.DB.Where("slug = ?", slug)
+
+	if _, authenticated := c.Get("user_id"); !authenticated {
+		query = query.Where("published = ?", true)
+	}
+
+	if err := query.First(&post).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found or not accessible"})
 		return
 	}
+
 	c.JSON(http.StatusOK, post)
 }
 
-type PatchPostRequest struct {
-	Title     *string   `json:"title"`
-	Slug      *string   `json:"slug"`
-	Excerpt   *string   `json:"excerpt"`
-	Content   *string   `json:"content"`
-	Tags      *[]string `json:"tags"`
-	PostType  *string   `json:"post_type"`
-	Published *bool     `json:"published"`
-}
-
 func UpdatePost(c *gin.Context) {
+	slug := c.Param("slug")
+
 	var post models.Post
-	id := c.Param("id")
-	if err := config.DB.First(&post, "id = ?", id).Error; err != nil {
+	if err := config.DB.Where("slug = ?", slug).First(&post).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
 		return
 	}
@@ -134,15 +156,16 @@ func UpdatePost(c *gin.Context) {
 	}
 
 	config.DB.Save(&post)
-
 	c.JSON(http.StatusOK, post)
 }
 
 func DeletePost(c *gin.Context) {
-	id := c.Param("id")
-	if err := config.DB.Delete(&models.Post{}, "id = ?", id).Error; err != nil {
+	slug := c.Param("slug")
+
+	if err := config.DB.Where("slug = ?", slug).Delete(&models.Post{}).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Delete failed"})
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "Post deleted"})
 }
