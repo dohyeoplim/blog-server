@@ -27,7 +27,7 @@ func UploadImage(c *gin.Context) {
 
 	ext := strings.ToLower(filepath.Ext(fileHeader.Filename))
 	timestamp := time.Now().UnixNano()
-	filename := fmt.Sprintf("blog-%d%s", timestamp, ext)
+	filename := fmt.Sprintf("img-%d%s", timestamp, ext)
 
 	url, err := services.UploadToR2(file, filename)
 	if err != nil {
