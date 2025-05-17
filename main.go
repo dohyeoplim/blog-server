@@ -28,6 +28,7 @@ func main() {
 
 	routes.RegisterAuthRoutes(r)
 	routes.RegisterPostRoutes(r)
+	routes.RegisterUploadRoutes(r)
 
 	port := os.Getenv("SERVER_PORT")
 	if port == "" {
