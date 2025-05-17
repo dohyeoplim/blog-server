@@ -38,7 +38,16 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		userEmail, ok := claims["email"].(string)
+		if !ok || userEmail != os.Getenv("ADMIN_EMAIL") {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_email", userEmail)
 		c.Set("user_id", claims["user_id"])
+
 		c.Next()
 	}
 }
@@ -67,7 +76,6 @@ func OptionalJWTAuthMiddleware() gin.HandlerFunc {
 			}
 		}
 
-		// Proceed regardless of validity
 		c.Next()
 	}
 }
