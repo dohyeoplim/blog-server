@@ -62,7 +62,7 @@ func VerifyTOTP(c *gin.Context) {
 		user.IsVerified = true
 		config.DB.Save(&user)
 
-		token, err := services.GenerateJWT(user.ID.String())
+		token, err := services.GenerateJWT(user.ID.String(), user.Email)
 		if err != nil {
 			c.JSON(500, gin.H{"error": "Failed to generate token"})
 			return
@@ -78,8 +78,11 @@ func VerifyTOTP(c *gin.Context) {
 }
 
 func Me(c *gin.Context) {
-	user_id := c.MustGet("user_id").(string)
+	userID, _ := c.Get("user_id")
+	email, _ := c.Get("email")
+
 	c.JSON(http.StatusOK, gin.H{
-		"user_id": user_id,
+		"user_id": userID,
+		"email":   email,
 	})
 }

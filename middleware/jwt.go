@@ -38,16 +38,17 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		userEmail, ok := claims["email"].(string)
-		if !ok || userEmail != os.Getenv("ADMIN_EMAIL") {
+		userID, idOk := claims["user_id"].(string)
+		userEmail, emailOk := claims["email"].(string)
+
+		if !idOk || !emailOk || userEmail != os.Getenv("ADMIN_EMAIL") {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 			c.Abort()
 			return
 		}
 
-		c.Set("user_email", userEmail)
-		c.Set("user_id", claims["user_id"])
-
+		c.Set("user_id", userID)
+		c.Set("email", userEmail)
 		c.Next()
 	}
 }
@@ -70,8 +71,11 @@ func OptionalJWTAuthMiddleware() gin.HandlerFunc {
 
 		if err == nil && token.Valid {
 			if claims, ok := token.Claims.(jwt.MapClaims); ok {
-				if userID, ok := claims["user_id"]; ok {
+				if userID, ok := claims["user_id"].(string); ok {
 					c.Set("user_id", userID)
+				}
+				if userEmail, ok := claims["email"].(string); ok {
+					c.Set("email", userEmail)
 				}
 			}
 		}

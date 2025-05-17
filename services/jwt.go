@@ -7,7 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateJWT(userID string) (string, error) {
+func GenerateJWT(userID, email string) (string, error) {
 	secret := os.Getenv("JWT_SECRET")
 	expMin := os.Getenv("JWT_EXP_MINUTES")
 	duration := time.Minute * 60
@@ -19,6 +19,7 @@ func GenerateJWT(userID string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userID,
+		"email":   email,
 		"exp":     time.Now().Add(duration).Unix(),
 	})
 

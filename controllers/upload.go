@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dohyeoplim/blog-server/utils"
+	"github.com/dohyeoplim/blog-server/services"
 	"github.com/gin-gonic/gin"
 )
 
@@ -29,7 +29,7 @@ func UploadImage(c *gin.Context) {
 	timestamp := time.Now().UnixNano()
 	filename := fmt.Sprintf("blog-%d%s", timestamp, ext)
 
-	url, err := utils.UploadToR2(file, filename)
+	url, err := services.UploadToR2(file, filename)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload image"})
 		return
